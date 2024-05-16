@@ -1,0 +1,65 @@
+#!/bin/bash
+clear
+
+# Make Configs
+if [[ "$(uname -o 2>/dev/null)" == "Android" ]]; then
+    continue
+elif [ "$(uname)" == "Linux" ]; then
+    cp dvce-scan /bin/dvce-scan
+    chmod +x /bin/dvce-scan
+fi
+
+while getopts ":m:" opt; do
+    case ${opt} in
+        m )
+            model_arg=$OPTARG
+            ;;
+        \? )
+            echo -e "\e[31mInvalid option: $OPTARG\e[0m" 1>&2
+            exit 1
+            ;;
+        : )
+            echo -e "\e[31mError: Option -$OPTARG requires an argument.\e[0m" 1>&2
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND -1))
+
+# Extracting IP range start from model_arg
+model=$(echo "$model_arg" | grep -oP '\d+\.\d+\.\d+\.')
+
+if [[ -z "$model" ]]; then
+      echo -e "Usage: dvce-scan -m <model (e.g 192.168.10.R)>"
+      exit 0
+fi
+
+# Checking if model_arg ends with ".R"
+if [[ ! "$model_arg" =~ \.R$ ]]; then
+    echo -e "\e[31mError: Invalid model format. Please ensure the model ends with '.R'.\e[0m"
+    exit 1
+fi
+
+# Set the maximum number of open file descriptors to 2048
+ulimit -n 2048
+
+# Scan for Devices IP & DNSs
+clear
+echo " +-+-+-+-+-+-+-+-+-+-+-+-+-+-"
+echo " |D|V|C|E|-|S|C|A|N|________."
+echo " +-+-+-+-+-+-+-+-+-+-+-+-+-+-"
+echo "============================="
+echo " Model => $model{1-255}             "
+echo "============================="
+echo
+parallel -j 0 '
+    ping -c 1 '$model'{} &>/dev/null
+    dns_name=$(host '$model'{} | awk "/domain name pointer/{print \$5}")
+    if [ -n "$dns_name" ]; then
+        echo -e "{+}> $dns_name('$model'{})."
+    fi
+' ::: $(seq 1 255)
+echo
+echo "============================="
+echo "            Done.            "
+echo "============================="
