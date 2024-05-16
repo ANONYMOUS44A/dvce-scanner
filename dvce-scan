@@ -30,7 +30,14 @@ shift $((OPTIND -1))
 model=$(echo "$model_arg" | grep -oP '\d+\.\d+\.\d+\.')
 
 if [[ -z "$model" ]]; then
+      echo " ┌────────────────────────────────────────┐ "
+      echo " │          |D|V|C|E|-|S|C|A|N|           │ "
+      echo " └────────────────────────────────────────┘ "
       echo -e "Usage: dvce-scan -m <model (e.g 192.168.10.R)>"
+      echo
+      echo -e "R = Range (1-255) [fix]"
+      echo -e "M = Model (e.g 192.168.10.[Range]) [editable] "
+      echo
       exit 0
 fi
 
@@ -45,21 +52,27 @@ ulimit -n 2048
 
 # Scan for Devices IP & DNSs
 clear
-echo " +-+-+-+-+-+-+-+-+-+-+-+-+-+-"
-echo " |D|V|C|E|-|S|C|A|N|________."
-echo " +-+-+-+-+-+-+-+-+-+-+-+-+-+-"
-echo "============================="
-echo " Model => $model{1-255}             "
-echo "============================="
+echo " ┌────────────────────────────────────────┐ "
+echo " │          |D|V|C|E|-|S|C|A|N|           │ "
+echo " └────────────────────────────────────────┘ "
+echo "    ::: DEVELOPED BY PENTAGONE GROUP :::    "
+echo "────────────────────────────────────────────"
+echo " └─[ Model ] ➤  $model{1-255}               "
+echo "────────────────────────────────────────────"
 echo
+echo -e "┌───────────────────────┰─────────────────────────┐"
+echo -e "│    DEVICE DNS NAMES   ┃   DEVICE IP ADDRESSES   │"
+echo -e "└───────────────────────┸─────────────────────────┘"
 parallel -j 0 '
-    ping -c 1 '$model'{} &>/dev/null
+    ping -c 0.2 '$model'{} &>/dev/null
     dns_name=$(host '$model'{} | awk "/domain name pointer/{print \$5}")
     if [ -n "$dns_name" ]; then
-        echo -e "{+}> $dns_name('$model'{})."
+        echo "    ┌──────────────────────────────────────────┐"
+        printf " ➤  │ %-40s │\n" "$dns_name  '$model'{}"
+        echo "    └──────────────────────────────────────────┘"
     fi
 ' ::: $(seq 1 255)
 echo
-echo "============================="
-echo "            Done.            "
-echo "============================="
+echo "────────────────────────────────────────────"
+echo "                  Done.                     "
+echo "────────────────────────────────────────────"
