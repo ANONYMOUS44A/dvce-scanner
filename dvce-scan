@@ -9,10 +9,10 @@ elif [ "$(uname)" == "Linux" ]; then
     chmod +x /bin/dvce-scan
 fi
 
-while getopts ":m:" opt; do
+while getopts ":p:" opt; do
     case ${opt} in
-        m )
-            model_arg=$OPTARG
+        p )
+            prefix_arg=$OPTARG
             ;;
         \? )
             echo -e "\e[31mInvalid option: $OPTARG\e[0m" 1>&2
@@ -27,23 +27,23 @@ done
 shift $((OPTIND -1))
 
 # Extracting IP range start from model_arg
-model=$(echo "$model_arg" | grep -oP '\d+\.\d+\.\d+\.')
+prefix=$(echo "$prefix_arg" | grep -oP '\d+\.\d+\.\d+\.')
 
-if [[ -z "$model" ]]; then
+if [[ -z "$prefix" ]]; then
       echo " ┌────────────────────────────────────────┐ "
       echo " │          |D|V|C|E|-|S|C|A|N|           │ "
       echo " └────────────────────────────────────────┘ "
-      echo -e "Usage: dvce-scan -m <model (e.g 192.168.10.R)>"
+      echo -e "Usage: dvce-scan -p <prefix (e.g 192.168.10.R)>"
       echo
-      echo -e "R = Range (1-255) [fix]"
-      echo -e "M = Model (e.g 192.168.10.[Range]) [editable] "
+      echo -e "R = Range (Default: 1-255) "
+      echo -e "p = prefix (e.g prefix:{192.168.10.}range:[1-255])"
       echo
       exit 0
 fi
 
 # Checking if model_arg ends with ".R"
-if [[ ! "$model_arg" =~ \.R$ ]]; then
-    echo -e "\e[31mError: Invalid model format. Please ensure the model ends with '.R'.\e[0m"
+if [[ ! "$prefix_arg" =~ \.R$ ]]; then
+    echo -e "\e[31mError: Invalid model format. Please ensure the IP format ends with '.R'.\e[0m"
     exit 1
 fi
 
@@ -57,18 +57,18 @@ echo " │          |D|V|C|E|-|S|C|A|N|           │ "
 echo " └────────────────────────────────────────┘ "
 echo "    ::: DEVELOPED BY PENTAGONE GROUP :::    "
 echo "────────────────────────────────────────────"
-echo " └─[ Model ] ➤  $model{1-255}               "
+echo " └─[ PREFIX ] ➤  $prefix{1-255}               "
 echo "────────────────────────────────────────────"
 echo
 echo -e "┌───────────────────────┰─────────────────────────┐"
 echo -e "│    DEVICE DNS NAMES   ┃   DEVICE IP ADDRESSES   │"
 echo -e "└───────────────────────┸─────────────────────────┘"
 parallel -j 0 '
-    ping -c 0.2 '$model'{} &>/dev/null
-    dns_name=$(host '$model'{} | awk "/domain name pointer/{print \$5}")
+    ping -c 0.2 '$prefix'{} &>/dev/null
+    dns_name=$(host '$prefix'{} | awk "/domain name pointer/{print \$5}")
     if [ -n "$dns_name" ]; then
         echo "    ┌──────────────────────────────────────────┐"
-        printf " ➤  │ %-40s │\n" "$dns_name  '$model'{}"
+        printf " ➤  │ %-40s │\n" "$dns_name  '$prefix'{}"
         echo "    └──────────────────────────────────────────┘"
     fi
 ' ::: $(seq 1 255)
