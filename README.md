@@ -2,7 +2,7 @@
 
 ## Installation
 ```
-git clone https://github.com/ANONYMOUS44A/dvce-scanner.git
+git clone https://github.com/TrabbitOne/dvce-scanner.git
 ```
 
 ```
